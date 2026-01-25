@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
+  "packages": ["tinygo@latest", "just@latest", "rustup@latest"],
+  "shell": {
+    "init_hook": ["rustup default nightly 2>/dev/null || true"],
+    "scripts": {
+      "test": ["echo \"Error: no test specified\" && exit 1"]
+    }
+  }
+}

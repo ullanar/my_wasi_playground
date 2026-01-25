@@ -1,0 +1,190 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "github:NixOS/nixpkgs/nixpkgs-unstable": {
+      "last_modified": "2026-01-24T15:20:28Z",
+      "resolved": "github:NixOS/nixpkgs/ab9fbbcf4858bd6d40ba2bbec37ceb4ab6e1f562?lastModified=1769268028&narHash=sha256-mAdJpV0e5IGZjnE4f%2F8uf0E4hQR7ptRP00gnZKUOdMo%3D"
+    },
+    "just@latest": {
+      "last_modified": "2026-01-11T16:44:50Z",
+      "resolved": "github:NixOS/nixpkgs/4d113fe1f7bb454435a5cabae6cd283e64191bb7#just",
+      "source": "devbox-search",
+      "version": "1.46.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/vsv9adrq0irdx5cxlj16yjlym01pb58v-just-1.46.0",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/b3jskd4jbk1xy7gmhzhapmf0s3qfgjjv-just-1.46.0-man",
+              "default": true
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/0lmvwpfys5fkjff8bf9zckzp137n0gjr-just-1.46.0-doc"
+            }
+          ],
+          "store_path": "/nix/store/vsv9adrq0irdx5cxlj16yjlym01pb58v-just-1.46.0"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/5xvqd6914l6bq4chkvxhwpxmwsyjvk79-just-1.46.0",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/z87cf5g4gxnbzrswypw0c2vfq7cd7qs9-just-1.46.0-man",
+              "default": true
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/jfakhs2ca94q913qv11i864hfgds32rn-just-1.46.0-doc"
+            }
+          ],
+          "store_path": "/nix/store/5xvqd6914l6bq4chkvxhwpxmwsyjvk79-just-1.46.0"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/a9x4nkvyiqnsbc5c7m4hxbdd66ppjvzp-just-1.46.0",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/ajl8m1jly6vnlgi7674slnas8hha5fzv-just-1.46.0-man",
+              "default": true
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/fhrjjd4zlzkr1pb1a5581rc5rpzl83js-just-1.46.0-doc"
+            }
+          ],
+          "store_path": "/nix/store/a9x4nkvyiqnsbc5c7m4hxbdd66ppjvzp-just-1.46.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/rjx80xk7ly0i4d6sflilvphpx9drqdgd-just-1.46.0",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/jlr7zha9axbwy8ccqs4h6myra019mhf3-just-1.46.0-man",
+              "default": true
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/wy4s0z7rcizywylg9nbyklx07d7a8kxy-just-1.46.0-doc"
+            }
+          ],
+          "store_path": "/nix/store/rjx80xk7ly0i4d6sflilvphpx9drqdgd-just-1.46.0"
+        }
+      }
+    },
+    "rustup@latest": {
+      "last_modified": "2025-12-31T03:27:36Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/f665af0cdb70ed27e1bd8f9fdfecaf451260fc55#rustup",
+      "source": "devbox-search",
+      "version": "1.28.2",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/v0cfpbl35r8y950rx1l17xs8i09pjq1b-rustup-1.28.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/v0cfpbl35r8y950rx1l17xs8i09pjq1b-rustup-1.28.2"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/rfi35nzh27wx48v3chbxl7kwp0cyfaab-rustup-1.28.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/rfi35nzh27wx48v3chbxl7kwp0cyfaab-rustup-1.28.2"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/60xn8pb5myf7kddr1wg7q0fpr0g2fl2y-rustup-1.28.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/60xn8pb5myf7kddr1wg7q0fpr0g2fl2y-rustup-1.28.2"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/w3hyqp287l6j790wn81x8chj5bcb69wb-rustup-1.28.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/w3hyqp287l6j790wn81x8chj5bcb69wb-rustup-1.28.2"
+        }
+      }
+    },
+    "tinygo@latest": {
+      "last_modified": "2026-01-02T14:39:32Z",
+      "resolved": "github:NixOS/nixpkgs/16c7794d0a28b5a37904d55bcca36003b9109aaa#tinygo",
+      "source": "devbox-search",
+      "version": "0.39.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/rkrm7sixz9qddsnanz5w5zidsksjxz6i-tinygo-0.39.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/rkrm7sixz9qddsnanz5w5zidsksjxz6i-tinygo-0.39.0"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/ikif9q44w4gl040advpzgh93y10scvnf-tinygo-0.39.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/ikif9q44w4gl040advpzgh93y10scvnf-tinygo-0.39.0"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/a8xz50yf3vb42s55r44sn9681plvbmgr-tinygo-0.39.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/a8xz50yf3vb42s55r44sn9681plvbmgr-tinygo-0.39.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/2k3xvzhf2snw6mx3b1x3r5wg08y3i405-tinygo-0.39.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/2k3xvzhf2snw6mx3b1x3r5wg08y3i405-tinygo-0.39.0"
+        }
+      }
+    }
+  }
+}
