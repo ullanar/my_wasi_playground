@@ -1,0 +1,12 @@
+package myapp:component@0.1.0;
+
+interface host {
+    log: func(msg: string);
+}
+
+world my-world {
+    include wasi:cli/imports@0.2.0;
+
+    import host;
+    export process: func(input: string) -> string;
+}

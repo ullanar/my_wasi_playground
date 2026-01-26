@@ -1,22 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"go_rust_wasi_test/internal/myapp/component/host"
+	myworld "go_rust_wasi_test/internal/myapp/component/my-world"
+)
 
-//export add
-func add(a, b int32) int32 {
-	fmt.Printf("Go: Adding %d + %d\n", a, b)
-	return a + b
+func process(input string) string {
+	host.Log("Processing: " + input)
+	return "Processed: " + input
 }
-
-//export multiply
-func multiply(a, b int32) int32 {
-	return a * b
-}
-
-//go:wasmimport host host_func
-func hostFunc(value int32)
 
 func main() {
-	fmt.Println("Go WASI module initialized!")
-	hostFunc(42)
+	myworld.Exports.Process = process
 }
