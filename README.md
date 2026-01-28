@@ -16,6 +16,8 @@ I want to understand several HowTo things:
 - Interact with the Rust application from WASI components
 - Interact between several WASI components (?) probably via the core app
 - Async
+- Profile WASM [actually here some docs](https://docs.wasmtime.dev/examples-profiling.html)
+- Compare WASM heavy math performance with native languages performance
 
 And I want to try several languages for WASI components.
 
@@ -76,4 +78,5 @@ just run
 ## EXTREMELY (!) useful links
 There are just so many possibilities and such a small documentation. So it is a blessing to find something like this:
 - [Component model by Bytecode Alliance](https://component-model.bytecodealliance.org/introduction.html)
-- [wasmCloud tools and docs](https://wasmcloud.com/docs/intro/) (CNCF btw!)
+- [WasmCloud tools and docs](https://wasmcloud.com/docs/intro/) (CNCF btw!)
+- [Wasmtime Rust docs](https://docs.wasmtime.dev/)

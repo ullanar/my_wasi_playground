@@ -1,7 +1,7 @@
-GO_DIR := "modules/go"
+GO_DIR := "components/go"
 GO_WIT_DIR := "{{GO_DIR}}/wit"
-GO_WIT_PACKAGE := "myapp:component@0.1.0.wasm"
-GO_WORLD := "my-world"
+GO_WIT_PACKAGE := "wasi:playground@0.1.0.wasm"
+GO_WORLD := "playground"
 GO_OUTPUT := "component.wasm"
 
 # Build WASI components (go or all)

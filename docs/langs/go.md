@@ -120,20 +120,26 @@ package main
 
 import (
     "my-component/internal/myapp/component/host"
+    myworld "my-component/internal/myapp/component/my-world"
 )
 
-// Implement exported function
-//export process
+// Implement the exported function
 func process(input string) string {
     // Call imported host function
     host.Log("Processing: " + input)
     return "Processed: " + input
 }
 
+// Register exports in init() - CRITICAL!
+// init() runs during module instantiation, before any exports are called
+func init() {
+    myworld.Exports.Process = process
+}
+
 func main() {}
 ```
 
-**Note**: `main()` must exist but stays empty for wasip2 target.
+**⚠️ Critical**: Use `init()` to register exports, NOT `main()`! The `main()` function is called via WASI `_start`, but exports may be called before that. Using `init()` ensures exports are registered during module instantiation.
 
 ### **Step 6: Build**
 ```bash
@@ -198,33 +204,43 @@ wasmtime serve server.wasm
 
 ## **Common Patterns**
 
-### **Exporting Functions**
+### **Exporting Functions (wit-bindgen-go)**
 ```go
-//export functionName
-func functionName(param string) string {
+import myworld "my-component/internal/myapp/component/my-world"
+
+func myFunction(param string) string {
     return "result"
+}
+
+func init() {
+    // Register exports during module initialization
+    myworld.Exports.MyFunction = myFunction
 }
 ```
 
 ### **Importing Host Functions**
 ```go
-import "my-component/internal/namespace/package"
+import "my-component/internal/myapp/component/host"
 
-// Use generated bindings
-namespace.PackageFunctionName("argument")
+// Use generated bindings directly
+host.Log("message")
+host.SomeOtherFunction("argument")
 ```
 
 ### **Working with Complex Types**
 ```go
 // WIT: record user { name: string, age: u32 }
-type User struct {
-    Name string
-    Age  uint32
+// Generated type will be in the bindings package
+
+import myworld "my-component/internal/myapp/component/my-world"
+import types "my-component/internal/myapp/component/types"
+
+func getUser() types.User {
+    return types.User{Name: "Alice", Age: 30}
 }
 
-//export getUser
-func getUser() User {
-    return User{Name: "Alice", Age: 30}
+func init() {
+    myworld.Exports.GetUser = getUser
 }
 ```
 
@@ -234,20 +250,25 @@ func getUser() User {
 
 ✅ **Do**:
 - Always include `wasi:cli/imports@0.2.0` in wasip2 worlds
+- Use `init()` to register exports (not `main()`)
 - Use `go.mod` tool dependencies for `wit-bindgen-go`
 - Gitignore `internal/` and `wit/deps/` directories
 - Keep `main()` function (even if empty)
 - Use `-no-debug -opt=2` for production builds
 
 ❌ **Don't**:
+- Don't register exports in `main()` - they won't be ready when called
 - Don't use `net/http` standard library (use wasihttp instead)
 - Don't use `encoding/json` with reflection (limited support)
 - Don't use standard Go compiler (use TinyGo)
-- Don't forget `//export` directive
 
 ---
 
 ## **Troubleshooting**
+
+**"nil pointer dereference" when calling exports**:
+- Exports not registered - use `init()` instead of `main()` to register
+- `init()` runs during instantiation, `main()` runs later via `_start`
 
 **"failed to resolve import"**:
 - Add `include wasi:cli/imports@0.2.0` to WIT world
