@@ -1,0 +1,17 @@
+package wasi:playground@0.1.0;
+
+interface host {
+    log: func(msg: string);
+}
+
+world playground {
+    include wasi:cli/imports@0.2.0;
+
+    import host;
+    export process: func(input: string) -> string;
+
+    /// Benchmark matrix multiplication.
+    /// Multiplies two NxN matrices `iterations` times.
+    /// Returns total time in nanoseconds.
+    export matrix-bench: func(size: u32, iterations: u32) -> u64;
+}

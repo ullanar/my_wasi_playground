@@ -8,6 +8,9 @@
     "wkg@latest"
   ],
   "shell": {
-    "init_hook": ["rustup default nightly 2>/dev/null || true"]
+    "init_hook": [
+      "rustup default nightly 2>/dev/null || true",
+      "rustup target add wasm32-wasip2 2>/dev/null || true"
+    ]
   }
 }

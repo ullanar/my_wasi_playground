@@ -1,19 +1,8 @@
 use wasmtime::{
-    Engine,
-    Store,
-    component::{
-        Component,
-        HasSelf,
-        Linker,
-        bindgen,
-    },
+    Engine, Store,
+    component::{Component, HasSelf, Linker, bindgen},
 };
-use wasmtime_wasi::{
-    ResourceTable,
-    WasiCtx,
-    WasiCtxView,
-    WasiView,
-};
+use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxView, WasiView};
 
 bindgen!({
     inline: r#"
@@ -62,29 +51,47 @@ pub fn run() {
     )
     .unwrap();
 
-    let wasi = WasiCtx::builder()
-        .inherit_stdio()
-        .inherit_args()
-        .inherit_env()
-        .build();
+    let components = [
+        ("Go", "./components/go/component.wasm"),
+        ("Rust", "./components/rust/component.wasm"),
+    ];
 
-    let state = ComponentRunStates {
-        wasi_ctx: wasi,
-        resource_table: ResourceTable::new(),
-    };
+    for (name, path) in components {
+        println!("\n========== {} Component ==========", name);
 
-    let mut store = Store::new(&engine, state);
+        let component = match Component::from_file(&engine, path) {
+            Ok(c) => c,
+            Err(e) => {
+                println!("Failed to load {}: {}", path, e);
+                continue;
+            }
+        };
 
-    let component = Component::from_file(&engine, "./components/go/component.wasm").unwrap();
-    let instance = Playground::instantiate(&mut store, &component, &linker).unwrap();
+        // Need fresh store for each component
+        let wasi = WasiCtx::builder()
+            .inherit_stdio()
+            .inherit_args()
+            .inherit_env()
+            .build();
+        let state = ComponentRunStates {
+            wasi_ctx: wasi,
+            resource_table: ResourceTable::new(),
+        };
+        let mut store = Store::new(&engine, state);
 
-    let result = instance
-        .call_process(&mut store, "Hello from Rust!")
-        .unwrap();
-    println!("Go component returned: {}", result);
+        let instance = Playground::instantiate(&mut store, &component, &linker).unwrap();
 
-    // Matrix multiplication benchmark
-    println!("\n=== Matrix Multiplication Benchmark ===");
+        let result = instance
+            .call_process(&mut store, "Hello from Rust host!")
+            .unwrap();
+        println!("{} component returned: {}", name, result);
+
+        run_benchmark(&instance, &mut store, name);
+    }
+}
+
+fn run_benchmark(instance: &Playground, mut store: &mut Store<ComponentRunStates>, name: &str) {
+    println!("\n=== {} Matrix Multiplication Benchmark ===", name);
 
     let configs = [
         (64, 100), // Small: 64x64, 100 iterations

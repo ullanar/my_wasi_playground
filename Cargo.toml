@@ -1,3 +1,7 @@
+[workspace]
+members = [".", "components/rust"]
+resolver = "3"
+
 [package]
 name = "rusty-wasm-test"
 version = "0.1.0"
