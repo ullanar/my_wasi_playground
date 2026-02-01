@@ -42,15 +42,17 @@ Availiable just commands (hope I will not forget to update it)
 ```shell
 just -l
 Available recipes:
-    b target='go'   # Build WASI components (go or all)
+    b target='go'   # Build WASI components (go, rust, or all)
     build-all
     build-go
     build-host      # Rust host utilities
+    build-rust
     clean
     run
-    wkg target='go' # Bundle WIT dependencies (go or all)
+    wkg target='go' # Bundle WIT dependencies (go, rust, or all)
     wkg-all
     wkg-go
+    wkg-rust
 ```
 
 

@@ -1,8 +1,11 @@
+use std::sync::mpsc::{Receiver, Sender};
 use wasmtime::{
     Engine, Store,
     component::{Component, HasSelf, Linker, bindgen},
 };
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxView, WasiView};
+
+use crate::Command;
 
 bindgen!({
     inline: r#"
@@ -20,12 +23,17 @@ bindgen!({
     "#,
 });
 
-pub struct ComponentRunStates {
-    pub wasi_ctx: WasiCtx,
-    pub resource_table: ResourceTable,
+const COMPONENTS: &[(&str, &str)] = &[
+    ("Go", "./components/go/component.wasm"),
+    ("Rust", "./components/rust/component.wasm"),
+];
+
+struct State {
+    wasi_ctx: WasiCtx,
+    resource_table: ResourceTable,
 }
 
-impl WasiView for ComponentRunStates {
+impl WasiView for State {
     fn ctx(&mut self) -> WasiCtxView<'_> {
         WasiCtxView {
             ctx: &mut self.wasi_ctx,
@@ -34,93 +42,85 @@ impl WasiView for ComponentRunStates {
     }
 }
 
-impl wasi::playground::host::Host for ComponentRunStates {
+impl wasi::playground::host::Host for State {
     fn log(&mut self, msg: String) {
-        println!("[HOST LOG] {}", msg);
+        println!("    [log] {}", msg);
     }
 }
 
-pub fn run() {
+struct ComponentInstance {
+    name: &'static str,
+    store: Store<State>,
+    instance: Playground,
+}
+
+pub fn run(cmd_rx: Receiver<Command>, done_tx: Sender<()>) {
     let engine = Engine::default();
     let mut linker = Linker::new(&engine);
 
     wasmtime_wasi::p2::add_to_linker_sync(&mut linker).unwrap();
-    wasi::playground::host::add_to_linker::<ComponentRunStates, HasSelf<ComponentRunStates>>(
-        &mut linker,
-        |state| state,
-    )
-    .unwrap();
+    wasi::playground::host::add_to_linker::<State, HasSelf<State>>(&mut linker, |s| s).unwrap();
 
-    let components = [
-        ("Go", "./components/go/component.wasm"),
-        ("Rust", "./components/rust/component.wasm"),
-    ];
+    let mut instances: Vec<ComponentInstance> = COMPONENTS
+        .iter()
+        .filter_map(|(name, path)| {
+            let component = Component::from_file(&engine, path).ok()?;
+            let wasi = WasiCtx::builder()
+                .inherit_stdio()
+                .inherit_args()
+                .inherit_env()
+                .build();
+            let state = State {
+                wasi_ctx: wasi,
+                resource_table: ResourceTable::new(),
+            };
+            let mut store = Store::new(&engine, state);
+            let instance = Playground::instantiate(&mut store, &component, &linker).ok()?;
 
-    for (name, path) in components {
-        println!("\n========== {} Component ==========", name);
+            println!("[WASI] Loaded: {}", name);
+            Some(ComponentInstance {
+                name,
+                store,
+                instance,
+            })
+        })
+        .collect();
 
-        let component = match Component::from_file(&engine, path) {
-            Ok(c) => c,
-            Err(e) => {
-                println!("Failed to load {}: {}", path, e);
-                continue;
+    println!("[WASI] {} components ready\n", instances.len());
+
+    while let Ok(cmd) = cmd_rx.recv() {
+        match cmd {
+            Command::Tick(tick) => {
+                println!("[WASI] Tick {}", tick);
+                let msg = format!("tick:{}", tick);
+                for c in &mut instances {
+                    let result = c.instance.call_process(&mut c.store, &msg).unwrap();
+                    println!("  {}: {}", c.name, result);
+                }
             }
-        };
-
-        // Need fresh store for each component
-        let wasi = WasiCtx::builder()
-            .inherit_stdio()
-            .inherit_args()
-            .inherit_env()
-            .build();
-        let state = ComponentRunStates {
-            wasi_ctx: wasi,
-            resource_table: ResourceTable::new(),
-        };
-        let mut store = Store::new(&engine, state);
-
-        let instance = Playground::instantiate(&mut store, &component, &linker).unwrap();
-
-        let result = instance
-            .call_process(&mut store, "Hello from Rust host!")
-            .unwrap();
-        println!("{} component returned: {}", name, result);
-
-        run_benchmark(&instance, &mut store, name);
+            Command::Benchmark => {
+                println!("\n[WASI] Running benchmarks...");
+                let configs = [(64, 100), (128, 50), (256, 10)];
+                for c in &mut instances {
+                    println!("  {}:", c.name);
+                    for (size, iterations) in configs {
+                        let nanos = c
+                            .instance
+                            .call_matrix_bench(&mut c.store, size, iterations)
+                            .unwrap();
+                        let ops = (size as u64).pow(3) * 2 * iterations as u64;
+                        let gflops = ops as f64 / (nanos as f64 / 1e9) / 1e9;
+                        let ms = nanos as f64 / 1_000_000.0;
+                        println!(
+                            "    {}x{} x{}: {:.1}ms, {:.2} GFLOPS",
+                            size, size, iterations, ms, gflops
+                        );
+                    }
+                }
+            }
+        }
+        done_tx.send(()).unwrap();
     }
-}
 
-fn run_benchmark(instance: &Playground, mut store: &mut Store<ComponentRunStates>, name: &str) {
-    println!("\n=== {} Matrix Multiplication Benchmark ===", name);
-
-    let configs = [
-        (64, 100), // Small: 64x64, 100 iterations
-        (128, 50), // Medium: 128x128, 50 iterations
-        (256, 10), // Large: 256x256, 10 iterations
-        (512, 3),  // XL: 512x512, 3 iterations
-    ];
-
-    for (size, iterations) in configs {
-        let start = std::time::Instant::now();
-        let wasm_nanos = instance
-            .call_matrix_bench(&mut store, size, iterations)
-            .unwrap();
-        let total_elapsed = start.elapsed();
-
-        let wasm_duration = std::time::Duration::from_nanos(wasm_nanos);
-        let per_iter = wasm_duration / iterations;
-        let ops = (size as u64).pow(3) * 2 * iterations as u64; // 2*n^3 FLOPs per matmul
-        let gflops = ops as f64 / wasm_duration.as_secs_f64() / 1e9;
-
-        println!(
-            "{}x{} x{}: {:?} total, {:?}/iter, {:.2} GFLOPS (call overhead: {:?})",
-            size,
-            size,
-            iterations,
-            wasm_duration,
-            per_iter,
-            gflops,
-            total_elapsed - wasm_duration
-        );
-    }
+    println!("[WASI] Shutdown");
 }
