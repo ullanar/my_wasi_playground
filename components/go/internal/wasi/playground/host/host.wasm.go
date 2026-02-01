@@ -7,3 +7,15 @@ package host
 //go:wasmimport wasi:playground/host@0.1.0 log
 //go:noescape
 func wasmimport_Log(msg0 *uint8, msg1 uint32)
+
+//go:wasmimport wasi:playground/host@0.1.0 get-entities
+//go:noescape
+func wasmimport_GetEntities(result *string)
+
+//go:wasmimport wasi:playground/host@0.1.0 spawn-entity
+//go:noescape
+func wasmimport_SpawnEntity(name0 *uint8, name1 uint32, x0 float32, y0 float32) (result0 uint64)
+
+//go:wasmimport wasi:playground/host@0.1.0 rpc-call
+//go:noescape
+func wasmimport_RPCCall(target0 *uint8, target1 uint32, method0 *uint8, method1 uint32, args0 *uint8, args1 uint32) (result0 uint64)

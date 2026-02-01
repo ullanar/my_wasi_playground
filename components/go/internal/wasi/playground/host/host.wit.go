@@ -17,3 +17,47 @@ func Log(msg string) {
 	wasmimport_Log((*uint8)(msg0), (uint32)(msg1))
 	return
 }
+
+// GetEntities represents the imported function "get-entities".
+//
+// Query game state
+//
+//	get-entities: func() -> string
+//
+//go:nosplit
+func GetEntities() (result string) {
+	wasmimport_GetEntities(&result)
+	return
+}
+
+// SpawnEntity represents the imported function "spawn-entity".
+//
+// Modify game state
+//
+//	spawn-entity: func(name: string, x: f32, y: f32) -> u64
+//
+//go:nosplit
+func SpawnEntity(name string, x float32, y float32) (result uint64) {
+	name0, name1 := cm.LowerString(name)
+	x0 := (float32)(x)
+	y0 := (float32)(y)
+	result0 := wasmimport_SpawnEntity((*uint8)(name0), (uint32)(name1), (float32)(x0), (float32)(y0))
+	result = (uint64)((uint64)(result0))
+	return
+}
+
+// RPCCall represents the imported function "rpc-call".
+//
+// Cross-component RPC (async)
+//
+//	rpc-call: func(target: string, method: string, args: string) -> u64
+//
+//go:nosplit
+func RPCCall(target string, method string, args string) (result uint64) {
+	target0, target1 := cm.LowerString(target)
+	method0, method1 := cm.LowerString(method)
+	args0, args1 := cm.LowerString(args)
+	result0 := wasmimport_RPCCall((*uint8)(target0), (uint32)(target1), (*uint8)(method0), (uint32)(method1), (*uint8)(args0), (uint32)(args1))
+	result = (uint64)((uint64)(result0))
+	return
+}

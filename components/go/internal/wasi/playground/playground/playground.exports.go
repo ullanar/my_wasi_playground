@@ -6,14 +6,28 @@ package playground
 var Exports struct {
 	// Process represents the caller-defined, exported function "process".
 	//
-	//	process: func(input: string) -> string
-	Process func(input string) (result string)
+	// Called each tick
+	//
+	//	process: func(input: string)
+	Process func(input string)
+
+	// OnRPCRequest represents the caller-defined, exported function "on-rpc-request".
+	//
+	// Called when RPC request arrives (we are the target)
+	//
+	//	on-rpc-request: func(caller: string, method: string, args: string) -> string
+	OnRPCRequest func(caller string, method string, args string) (result string)
+
+	// OnRPCResponse represents the caller-defined, exported function "on-rpc-response".
+	//
+	// Called when our RPC call gets response
+	//
+	//	on-rpc-response: func(request-id: u64, response: string)
+	OnRPCResponse func(requestID uint64, response string)
 
 	// MatrixBench represents the caller-defined, exported function "matrix-bench".
 	//
-	// Benchmark matrix multiplication.
-	// Multiplies two NxN matrices `iterations` times.
-	// Returns total time in nanoseconds.
+	// Benchmark
 	//
 	//	matrix-bench: func(size: u32, iterations: u32) -> u64
 	MatrixBench func(size uint32, iterations uint32) (result uint64)

@@ -12,4 +12,6 @@ If you completely dont trust the AI it is probably will be better to read, get s
 
 # Table of Contents
 - [WIT and WKG](./wit_and_wkg.md)
-- [languages guides](./langs/README.md)
+- [Languages guides](./langs/README.md)
+- [Host-Component Communication](./host_component_communication.md)
+- [Matrix Benchmark](./math_benchmark.md)

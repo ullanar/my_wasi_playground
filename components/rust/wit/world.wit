@@ -2,16 +2,31 @@ package wasi:playground@0.1.0;
 
 interface host {
     log: func(msg: string);
+
+    // Query game state
+    get-entities: func() -> string;
+
+    // Modify game state
+    spawn-entity: func(name: string, x: f32, y: f32) -> u64;
+
+    // Cross-component RPC (async)
+    rpc-call: func(target: string, method: string, args: string) -> u64;
 }
 
 world playground {
     include wasi:cli/imports@0.2.0;
 
     import host;
-    export process: func(input: string) -> string;
 
-    /// Benchmark matrix multiplication.
-    /// Multiplies two NxN matrices `iterations` times.
-    /// Returns total time in nanoseconds.
+    // Called each tick
+    export process: func(input: string);
+
+    // Called when RPC request arrives (we are the target)
+    export on-rpc-request: func(caller: string, method: string, args: string) -> string;
+
+    // Called when our RPC call gets response
+    export on-rpc-response: func(request-id: u64, response: string);
+
+    // Benchmark
     export matrix-bench: func(size: u32, iterations: u32) -> u64;
 }

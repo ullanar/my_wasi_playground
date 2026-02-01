@@ -10,10 +10,29 @@ import (
 
 //go:wasmexport process
 //export process
-func wasmexport_Process(input0 *uint8, input1 uint32) (result *string) {
+func wasmexport_Process(input0 *uint8, input1 uint32) {
 	input := cm.LiftString[string]((*uint8)(input0), (uint32)(input1))
-	result_ := Exports.Process(input)
+	Exports.Process(input)
+	return
+}
+
+//go:wasmexport on-rpc-request
+//export on-rpc-request
+func wasmexport_OnRPCRequest(caller0 *uint8, caller1 uint32, method0 *uint8, method1 uint32, args0 *uint8, args1 uint32) (result *string) {
+	caller := cm.LiftString[string]((*uint8)(caller0), (uint32)(caller1))
+	method := cm.LiftString[string]((*uint8)(method0), (uint32)(method1))
+	args := cm.LiftString[string]((*uint8)(args0), (uint32)(args1))
+	result_ := Exports.OnRPCRequest(caller, method, args)
 	result = &result_
+	return
+}
+
+//go:wasmexport on-rpc-response
+//export on-rpc-response
+func wasmexport_OnRPCResponse(requestId0 uint64, response0 *uint8, response1 uint32) {
+	requestID := (uint64)((uint64)(requestId0))
+	response := cm.LiftString[string]((*uint8)(response0), (uint32)(response1))
+	Exports.OnRPCResponse(requestID, response)
 	return
 }
 
