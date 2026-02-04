@@ -121,6 +121,91 @@ struct ComponentInstance {
     instance: Playground,
 }
 
+fn load_components(
+    engine: &Engine,
+    linker: &Linker<State>,
+    shared: &Arc<Mutex<SharedState>>,
+) -> HashMap<String, ComponentInstance> {
+    COMPONENTS
+        .iter()
+        .filter_map(|(name, path)| {
+            let component = Component::from_file(engine, path).ok()?;
+            let wasi = WasiCtx::builder()
+                .inherit_stdio()
+                .inherit_args()
+                .inherit_env()
+                .build();
+            let state = State {
+                wasi_ctx: wasi,
+                resource_table: ResourceTable::new(),
+                shared: Arc::clone(shared),
+            };
+            let mut store = Store::new(engine, state);
+            let instance = Playground::instantiate(&mut store, &component, linker).ok()?;
+
+            println!("[WASI] Loaded: {}", name);
+            Some((name.to_string(), ComponentInstance { store, instance }))
+        })
+        .collect()
+}
+
+fn process_tick(
+    tick: u64,
+    instances: &mut HashMap<String, ComponentInstance>,
+    shared: &Arc<Mutex<SharedState>>,
+) {
+    println!("[WASI] Tick {}", tick);
+
+    let names: Vec<_> = instances.keys().cloned().collect();
+    for name in names {
+        shared.lock().unwrap().current_component = name.clone();
+        let c = instances.get_mut(&name).unwrap();
+        c.instance
+            .call_process(&mut c.store, &format!("tick:{}", tick))
+            .unwrap();
+    }
+
+    process_rpc_queue(instances, shared);
+
+    shared
+        .lock()
+        .unwrap()
+        .event_tx
+        .send(Event::TickDone)
+        .unwrap();
+}
+
+fn process_rpc_queue(
+    instances: &mut HashMap<String, ComponentInstance>,
+    shared: &Arc<Mutex<SharedState>>,
+) {
+    let requests: Vec<_> = shared.lock().unwrap().rpc_queue.drain(..).collect();
+
+    for req in requests {
+        let Some(target) = instances.get_mut(&req.to) else {
+            continue;
+        };
+
+        shared.lock().unwrap().current_component = req.to.clone();
+        println!("  [RPC] {} -> {}: {}", req.from, req.to, req.method);
+
+        let result = target
+            .instance
+            .call_on_rpc_request(&mut target.store, &req.from, &req.method, &req.args)
+            .unwrap();
+        println!("  [RPC] {} <- {}: {}", req.from, req.to, result);
+
+        let Some(caller) = instances.get_mut(&req.from) else {
+            continue;
+        };
+        shared.lock().unwrap().current_component = req.from.clone();
+        caller
+            .instance
+            .call_on_rpc_response(&mut caller.store, req.id, &result)
+            .unwrap();
+    }
+}
+
 pub fn run(cmd_rx: Receiver<Command>, event_tx: Sender<Event>, resp_rx: Receiver<Response>) {
     let engine = Engine::default();
     let mut linker = Linker::new(&engine);
@@ -136,80 +221,12 @@ pub fn run(cmd_rx: Receiver<Command>, event_tx: Sender<Event>, resp_rx: Receiver
         current_component: String::new(),
     }));
 
-    let mut instances: HashMap<String, ComponentInstance> = COMPONENTS
-        .iter()
-        .filter_map(|(name, path)| {
-            let component = Component::from_file(&engine, path).ok()?;
-            let wasi = WasiCtx::builder()
-                .inherit_stdio()
-                .inherit_args()
-                .inherit_env()
-                .build();
-            let state = State {
-                wasi_ctx: wasi,
-                resource_table: ResourceTable::new(),
-                shared: Arc::clone(&shared),
-            };
-            let mut store = Store::new(&engine, state);
-            let instance = Playground::instantiate(&mut store, &component, &linker).ok()?;
-
-            println!("[WASI] Loaded: {}", name);
-            Some((name.to_string(), ComponentInstance { store, instance }))
-        })
-        .collect();
-
+    let mut instances = load_components(&engine, &linker, &shared);
     println!("[WASI] {} components ready\n", instances.len());
 
     while let Ok(cmd) = cmd_rx.recv() {
         match cmd {
-            Command::Tick(tick) => {
-                println!("[WASI] Tick {}", tick);
-
-                let names: Vec<_> = instances.keys().cloned().collect();
-                for name in &names {
-                    shared.lock().unwrap().current_component = name.clone();
-
-                    let c = instances.get_mut(name).unwrap();
-                    let msg = format!("tick:{}", tick);
-                    c.instance.call_process(&mut c.store, &msg).unwrap();
-                }
-
-                // Process RPC queue
-                let requests: Vec<_> = shared.lock().unwrap().rpc_queue.drain(..).collect();
-                for req in requests {
-                    if let Some(target) = instances.get_mut(&req.to) {
-                        shared.lock().unwrap().current_component = req.to.clone();
-
-                        println!("  [RPC] {} -> {}: {}", req.from, req.to, req.method);
-                        let result = target
-                            .instance
-                            .call_on_rpc_request(
-                                &mut target.store,
-                                &req.from,
-                                &req.method,
-                                &req.args,
-                            )
-                            .unwrap();
-                        println!("  [RPC] {} <- {}: {}", req.from, req.to, result);
-
-                        if let Some(caller) = instances.get_mut(&req.from) {
-                            shared.lock().unwrap().current_component = req.from.clone();
-                            caller
-                                .instance
-                                .call_on_rpc_response(&mut caller.store, req.id, &result)
-                                .unwrap();
-                        }
-                    }
-                }
-
-                // Signal tick done
-                shared
-                    .lock()
-                    .unwrap()
-                    .event_tx
-                    .send(Event::TickDone)
-                    .unwrap();
-            }
+            Command::Tick(tick) => process_tick(tick, &mut instances, &shared),
         }
     }
 
